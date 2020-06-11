@@ -31,19 +31,35 @@
         const list = document.getElementById('recordings');
         
         //check if browser supports access to mediarecorder
+        //access microphone using getUserMedia API (see MDN); wait for user to click button first (better UE)
         if ('MediaRecorder' in window) {
-          //everything is good, let's go ahead
+          //make the click handler an async function
+          getMic.addEventListener('click', async () => {
+            getMic.setAttribute('hidden', 'hidden');
+            try {
+              //calling getUserMedia awaits the result (returns a promise that resolves successfully if user gives access)
+              const stream = await navigator.mediaDevices.getUserMedia({
+                audio: true,
+                video: false
+              });
+              console.log(stream);
+            //if user denies access
+            } catch {
+              renderError(
+                'You denied access to the microphone'
+              );
+            }
+          });
         } else {
           renderError("Sorry, your browser doesn't support the MediaRecorder API, please try a different browser.");
         }
       });
-        //renderError method replaces contents of 'main' with error msg
+      
+      //renderError method replaces contents of 'main' with error msg
       function renderError(message) {
         const main = document.querySelector('main');
         main.innerHTML = `<div class="error"><p>${message}</p></div>`
       }
-
-      //access microphone
 
     </script>
   </body>

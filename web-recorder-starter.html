@@ -69,8 +69,19 @@
                 chunks = [];
               });
               //enable a button to start and stop the recording
-              
-               
+              //unhide the recording button
+              recordButton.removeAttribute('hidden');
+              //when record button clicked, either start or stop recording dep. on state
+              recordButton.addEventListener('click', () => {
+                if (recorder.state === 'inactive') {
+                  recorder.start();
+                  recordButton.innerText = 'Stop';
+                } else {
+                  recorder.stop();
+                  recordButton.innerText = 'Record';
+                }
+              });
+
             //if user denies access
             } catch {
               renderError(
@@ -88,6 +99,33 @@
         const main = document.querySelector('main');
         main.innerHTML = `<div class="error"><p>${message}</p></div>`
       }
+
+      //Render the recordings into <audio> elements and provide a download link 
+      //  so a user can save recording desktop.
+      //Take the Blob we created and turn it into a URL using the URL.createObjectURL method
+      //This URL can then be used as the src of an <audio> element and as the href of an anchor
+      //To make the anchor download the file, we set the download attribute.
+      //The function is mostly creating DOM elements and making a file name out of the time 
+      //  that the recording was made.
+      function renderRecording(blob, list) {
+        const blobUrl = URL.createObjectURL(blob);
+        const li = document.createElement('li');
+        const audio = document.createElement('audio');
+        const anchor = document.createElement('a');
+        anchor.setAttribute('href', blobUrl);
+        const now = new Date();
+        anchor.setAttribute(
+          'download',
+          `recording-${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2,'0')}-${now.getDay().toString().padStart(2,'0')}--${now.getHours().toString().padStart(2,'0')}-${now.getMinutes().toString().padStart(2,'0')}-${now.getSeconds().toString().padStart(2,'0')}.webm`
+        );
+        anchor.innerText = 'Download';
+        audio.setAttribute('src', blobUrl);
+        audio.setAttribute('controls', 'controls');
+        li.appendChild(audio);
+        li.appendChild(anchor);
+        list.appendChild(li);
+      }
+
 
     </script>
   </body>

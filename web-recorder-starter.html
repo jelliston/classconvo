@@ -116,7 +116,12 @@
         const now = new Date();
         anchor.setAttribute(
           'download',
-          `recording-${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2,'0')}-${now.getDay().toString().padStart(2,'0')}--${now.getHours().toString().padStart(2,'0')}-${now.getMinutes().toString().padStart(2,'0')}-${now.getSeconds().toString().padStart(2,'0')}.webm`
+          `recording-${now.getFullYear()}-
+          ${(now.getMonth() + 1).toString().padStart(2,'0')}-
+          ${now.getDay().toString().padStart(2,'0')}--
+          ${now.getHours().toString().padStart(2,'0')}-
+          ${now.getMinutes().toString().padStart(2,'0')}-
+          ${now.getSeconds().toString().padStart(2,'0')}.webm`
         );
         anchor.innerText = 'Download';
         audio.setAttribute('src', blobUrl);
@@ -126,6 +131,10 @@
         list.appendChild(li);
       }
 
+      //problems - app doesn't save audio files so a page refresh loses them
+      //  I could maybe save them using IndexedDB or send them to a server
+      //Possibility to pass the audio through Web Audio API before recording it
+      //MP3 - re-encode the audio (using Web Assembly?)
 
     </script>
   </body>

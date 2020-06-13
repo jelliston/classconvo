@@ -25,33 +25,62 @@
     </footer>
     <script>
       window.addEventListener('DOMContentLoaded', () => {
+        //Wiring up some UI 
         const getMic = document.getElementById('mic');
         const recordButton = document.getElementById('record');
         const list = document.getElementById('recordings');
+        
+        //check if browser supports access to mediarecorder
+        //access microphone using getUserMedia API (see MDN); wait for user to click button first (better UE)
         if ('MediaRecorder' in window) {
+          //make the click handler an async function
           getMic.addEventListener('click', async () => {
             getMic.setAttribute('hidden', 'hidden');
             try {
+              
+              //calling getUserMedia awaits the result (returns a promise that resolves 
+              //successfully if user gives access)
               const stream = await navigator.mediaDevices.getUserMedia({
                 audio: true,
                 video: false
               });
+              
+              //set audio recording type to webm (change to mp3 later) 
               const mimeType = 'audio/webm';
+              
+              //use to store parts of the recording as it is created
               let chunks = [];
+              
+              //initialize a new MediaRecorder (see MDN) with the media stream we captured 
+              //and an object of options
               const recorder = new MediaRecorder(stream, { type: mimeType });
+              
+              //after creating recorder - set up some listeners for the events it emits
+              //first the dataavailable event emits periodically while recording is active
+              //events contain a chunk of the recording, we push onto chunks array
               recorder.addEventListener('dataavailable', event => {
                 if (typeof event.data === 'undefined') return;
-                if (event.data.size === 0) return;
-                chunks.push(event.data);
+                  if (event.data.size === 0) return;
+                  chunks.push(event.data);
               });
+              
+              //when stop event fires we gather all chunks into a Blob which we can play with
+              //an <audio> element
               recorder.addEventListener('stop', () => {
                 const recording = new Blob(chunks, {
                   type: mimeType
                 });
                 renderRecording(recording, list);
+                
+                //reset the array of chunks
                 chunks = [];
               });
+              
+              //enable a button to start and stop the recording
+              //unhide the recording button
               recordButton.removeAttribute('hidden');
+              
+              //when record button clicked, either start or stop recording dep. on state
               recordButton.addEventListener('click', () => {
                 if (recorder.state === 'inactive') {
                   recorder.start();
@@ -61,24 +90,32 @@
                   recordButton.innerText = 'Record';
                 }
               });
+
+            //if user denies access
             } catch {
               renderError(
-                'You denied access to the microphone so this demo will not work.'
+                'You denied access to the microphone'
               );
             }
           });
         } else {
-          renderError(
-            "Sorry, your browser doesn't support the MediaRecorder API, so this demo will not work."
-          );
+          renderError("Sorry, your browser doesn't support the MediaRecorder API, please try a different browser.");
         }
       });
-
+      
+      //renderError method replaces contents of 'main' with error msg
       function renderError(message) {
         const main = document.querySelector('main');
-        main.innerHTML = `<div class="error"><p>${message}</p></div>`;
+        main.innerHTML = `<div class="error"><p>${message}</p></div>`
       }
 
+      //Render the recordings into <audio> elements and provide a download link 
+      //  so a user can save recording desktop.
+      //Take the Blob we created and turn it into a URL using the URL.createObjectURL method
+      //This URL can then be used as the src of an <audio> element and as the href of an anchor
+      //To make the anchor download the file, we set the download attribute.
+      //The function is mostly creating DOM elements and making a file name out of the time 
+      //  that the recording was made.
       function renderRecording(blob, list) {
         const blobUrl = URL.createObjectURL(blob);
         const li = document.createElement('li');
@@ -90,19 +127,19 @@
           'download',
           `recording-${now.getFullYear()}-${(now.getMonth() + 1)
             .toString()
-            .padStart(2, '0')}-${now
-            .getDay()
+            .padStart(2,'0')}-${now
+            .getDate()
             .toString()
-            .padStart(2, '0')}--${now
+            .padStart(2,'0')} at ${now
             .getHours()
             .toString()
-            .padStart(2, '0')}-${now
+            .padStart(2,'0')}.${now
             .getMinutes()
             .toString()
-            .padStart(2, '0')}-${now
+            .padStart(2,'0')}.${now
             .getSeconds()
             .toString()
-            .padStart(2, '0')}.webm`
+            .padStart(2,'0')}.webm`
         );
         anchor.innerText = 'Download';
         audio.setAttribute('src', blobUrl);
@@ -111,6 +148,12 @@
         li.appendChild(anchor);
         list.appendChild(li);
       }
+
+      //problems - app doesn't save audio files so a page refresh loses them
+      //  I could maybe save them using IndexedDB or send them to a server
+      //Possibility to pass the audio through Web Audio API before recording it
+      //MP3 - re-encode the audio (using Web Assembly?)
+
     </script>
   </body>
 </html>

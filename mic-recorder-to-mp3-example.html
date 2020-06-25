@@ -1,0 +1,72 @@
+<!--example taken from JSfiddle here: https://jsfiddle.net/8u5fbpx6/1/ -->
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+        <title>Mic Recorder to Mp3 Example</title>
+    </head>
+    <body>
+        <main>
+            <div class="container text-center">
+                <h1>Mic Recorder to Mp3 Example</h1>
+                <p>Check your web developer tool console.</p>
+            
+                <hr />
+            
+                <button class="btn btn-primary">Start recording</button>
+            
+                <br />
+                <br />
+                <br />
+            
+                <ul id="playlist"></ul>
+             </div>
+        </main>
+        <script>
+            const button = document.querySelector('button');
+            const recorder = new MicRecorder({
+            bitRate: 128
+            });
+
+            button.addEventListener('click', startRecording);
+
+            function startRecording() {
+            recorder.start().then(() => {
+                button.textContent = 'Stop recording';
+                button.classList.toggle('btn-danger');
+                button.removeEventListener('click', startRecording);
+                button.addEventListener('click', stopRecording);
+            }).catch((e) => {
+                console.error(e);
+            });
+            }
+
+            function stopRecording() {
+            recorder.stop().getMp3().then(([buffer, blob]) => {
+                console.log(buffer, blob);
+                const file = new File(buffer, 'music.mp3', {
+                type: blob.type,
+                lastModified: Date.now()
+                });
+
+                const li = document.createElement('li');
+                const player = new Audio(URL.createObjectURL(file));
+                player.controls = true;
+                li.appendChild(player);
+                document.querySelector('#playlist').appendChild(li);
+
+                button.textContent = 'Start recording';
+                button.classList.toggle('btn-danger');
+                button.removeEventListener('click', stopRecording);
+                button.addEventListener('click', startRecording);
+            }).catch((e) => {
+                console.error(e);
+            });
+            }
+     </script>
+
+    </body>
+ 
+ </html>
